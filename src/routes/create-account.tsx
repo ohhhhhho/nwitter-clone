@@ -1,5 +1,13 @@
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useState } from "react";
 import styled from "styled-components";
+import { auth } from "../firebase";
+import { useNavigate } from "react-router-dom";
+import { FirebaseError } from "firebase/app";
+
+const errors = {
+  emailAlready: "That email already exist.",
+};
 
 const Wrapper = styled.div`
   height: 100%;
@@ -38,6 +46,7 @@ const Error = styled.span`
 `;
 
 export default function CreateAccout() {
+  const navigate = useNavigate();
   const [isLoading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -54,17 +63,37 @@ export default function CreateAccout() {
     } else if (name === "password") {
       setPassword(value);
     }
+    SetError("");
   };
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    //계정생상
-    //사용자의 프로필 이름 세팅
-    //홈페이지로 리다이렉션
-    console.log(name, email, password);
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e?.preventDefault();
+    if (isLoading || name === "" || email === "" || password === "") return; //빈값일때 함수를 종료시킴
+    try {
+      setLoading(true);
+      const credentials = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      console.log(credentials.user);
+      await updateProfile(credentials.user, {
+        displayName: name,
+      });
+      navigate("/");
+    } catch (e) {
+      //setError
+      if (e instanceof FirebaseError) {
+        console.log(e.code, e.message);
+        SetError(errors.emailAlready);
+      }
+    } finally {
+      setLoading(false);
+    }
+    // console.log(name, email, password);
   };
   return (
     <Wrapper>
-      <Title>Log into X</Title>
+      <Title>Join X</Title>
       <Form onSubmit={onSubmit}>
         <Input
           name="name"
