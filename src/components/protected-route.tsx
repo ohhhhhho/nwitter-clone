@@ -7,8 +7,7 @@ export default function ProtectedRoute({
   children: React.ReactNode;
 }) {
   const user = auth.currentUser; //firebase에 유저정보 확인
-  console.log("user", user);
-  if (user === null) {
+  if (!user) {
     return <Navigate to="/login" />; //firebase에 유저정보가 없다면 로그인 페이지로
   }
   return children;
